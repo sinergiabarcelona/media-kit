@@ -40,7 +40,8 @@ CROSS
   meson setup "$B/dav1d" src/dav1d --cross-file "$B/cross.txt" --prefix="$P" --libdir=lib -Ddefault_library=static -Denable_tools=false -Denable_tests=false && ninja -C "$B/dav1d" install
   (mkdir -p "$B/ffmpeg" && cd "$B/ffmpeg" && "$OLDPWD/src/ffmpeg/configure" --prefix="$P" --enable-cross-compile --target-os=darwin --arch=arm64 \
      --cc="$CC" --sysroot="$SYSROOT" $(ffmpeg_flags) --enable-videotoolbox --enable-audiotoolbox && make -j"$(sysctl -n hw.ncpu)" install)
-  meson setup "$B/mpv" src/mpv --cross-file "$B/cross.txt" --prefix="$P" --libdir=lib $(mpv_flags) -Dswift-build=disabled  # TODO: confirmar opciones de vo para tvOS/xros en mpv 0.40 && ninja -C "$B/mpv" install
+  # TODO: confirmar opciones de vo para tvOS/xros en mpv 0.40.
+  meson setup "$B/mpv" src/mpv --cross-file "$B/cross.txt" --prefix="$P" --libdir=lib $(mpv_flags) -Dswift-build=disabled && ninja -C "$B/mpv" install
   check_lgpl "$P"
 done
 # Empaquetado: xcodebuild -create-xcframework -library ... por SDK (ver README).
