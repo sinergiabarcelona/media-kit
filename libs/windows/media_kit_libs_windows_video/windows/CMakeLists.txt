@@ -17,15 +17,22 @@ project(${PROJECT_NAME} LANGUAGES CXX)
 add_compile_definitions(_DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR)
 
 # ------------------------------------------------------------------------------
+# reproduko: el hash puede ser MD5 (32 hex, ANGLE) o SHA256 (64 hex, libmpv).
 function(download_and_verify url md5 locationForArchive)
+  string(LENGTH "${md5}" HASH_LENGTH)
+  if(HASH_LENGTH EQUAL 64)
+    set(HASH_ALGO SHA256)
+  else()
+    set(HASH_ALGO MD5)
+  endif()
   # Check if the archive exists.
   if(EXISTS "${locationForArchive}")
-    file(MD5 "${locationForArchive}" ARCHIVE_MD5)
+    file(${HASH_ALGO} "${locationForArchive}" ARCHIVE_MD5)
 
-    # If MD5 doesn't match, delete the archive to download again.
+    # If the hash doesn't match, delete the archive to download again.
     if(NOT md5 STREQUAL ARCHIVE_MD5)
       file(REMOVE "${locationForArchive}")
-      message(STATUS "MD5 mismatch. File deleted.")
+      message(STATUS "${HASH_ALGO} mismatch. File deleted.")
     endif()
   endif()
 
@@ -35,8 +42,8 @@ function(download_and_verify url md5 locationForArchive)
     file(DOWNLOAD "${url}" "${locationForArchive}")
     message(STATUS "Downloaded archive to ${locationForArchive}.")
 
-    # Verify MD5 of the newly downloaded file.
-    file(MD5 "${locationForArchive}" ARCHIVE_MD5)
+    # Verify the hash of the newly downloaded file.
+    file(${HASH_ALGO} "${locationForArchive}" ARCHIVE_MD5)
 
     if(md5 STREQUAL ARCHIVE_MD5)
       message(STATUS "${locationForArchive} Verification successful.")
@@ -64,19 +71,28 @@ function(check_directory_exists_and_not_empty dir result_var)
   endif()
 endfunction()
 
-# Detect architecture and set appropriate libmpv archive
+# Detect architecture and set appropriate libmpv archive.
+# reproduko: libmpv LGPL-2.1+ propia (mpv 0.41.0, FFmpeg 8.0.3), receta en
+# reproduko/libmpv-lgpl/. El aarch64 está compilado pero sin probar: ANGLE.7z
+# (v1.0.1) solo trae DLL x64.
+set(LIBMPV_REV "lgpl-r1")
 if(${FLUTTER_TARGET_PLATFORM} STREQUAL "windows-x64")
   set(LIBMPV_ARCH "x86_64")
-  set(LIBMPV "mpv-dev-x86_64-20241021-git-0f78584.7z")
-  set(LIBMPV_MD5 "6ecf18e85b093c3f7edb16f3ee6603f3")
+  set(LIBMPV "mpv-dev-x86_64-${LIBMPV_REV}.7z")
+  set(LIBMPV_MD5 "d688432100d4b767a62be88d297a544e84d58c603037169ae84a5c31c47a5471")
 else()
   set(LIBMPV_ARCH "aarch64")
-  set(LIBMPV "mpv-dev-aarch64-20241021-git-0f78584.7z")
-  set(LIBMPV_MD5 "5b507a35db13eee6cb7eb21e8be7c83d")
+  set(LIBMPV "mpv-dev-aarch64-${LIBMPV_REV}.7z")
+  set(LIBMPV_MD5 "358cf453f864fcf11f8f491682659a2c968c818842521aafb53094348c517256")
 endif()
 
-# Download URL for the libmpv archive from the latest release
-set(LIBMPV_URL "https://github.com/media-kit/libmpv-win32-video-cmake/releases/download/20241021/${LIBMPV}")
+# Download URL for the libmpv archive (SHA256 in LIBMPV_MD5).
+set(LIBMPV_URL "https://github.com/sinergiabarcelona/media-kit/releases/download/libmpv-${LIBMPV_REV}/${LIBMPV}")
+# Pruebas locales: REPRODUKO_LIBMPV_URL=file:///C:/ruta/mpv-dev-x86_64-lgpl-r1.7z
+# (el hash se sigue comprobando).
+if(DEFINED ENV{REPRODUKO_LIBMPV_URL})
+  set(LIBMPV_URL "$ENV{REPRODUKO_LIBMPV_URL}")
+endif()
 
 # Download location of the libmpv archive.
 set(LIBMPV_ARCHIVE "${CMAKE_BINARY_DIR}/${LIBMPV}")

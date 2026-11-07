@@ -56,22 +56,26 @@ task downloadDependencies(type: Exec) {
         }
         outputDir.mkdirs()
 
-        // Download all *.jar dependencies & verify their MD5 checksums.
+        // Download all *.jar dependencies & verify their SHA-256 checksums.
+        // reproduko: libmpv LGPL-2.1+ propio (mpv 0.41.0, FFmpeg 8.0.3), Release
+        // libmpv-lgpl-r1 del fork. REPRODUKO_LIBMPV_BASE_URL (p. ej. file:///.../dist)
+        // sustituye la URL base para probar binarios locales; el hash no cambia.
+        def libmpvBase = System.getenv("REPRODUKO_LIBMPV_BASE_URL") ?: "https://github.com/sinergiabarcelona/media-kit/releases/download/libmpv-lgpl-r1"
         def filesToDownload = [
-            ["url": "https://github.com/media-kit/libmpv-android-video-build/releases/download/v1.1.11/full-arm64-v8a.jar", "md5": "86f2c8faeb66af1878b3a16f67831cb3", "destination": file("$buildDir/v1.1.11/full-arm64-v8a.jar")],
-            ["url": "https://github.com/media-kit/libmpv-android-video-build/releases/download/v1.1.11/full-armeabi-v7a.jar", "md5": "93542d40e44f3afad3aa773674e8eaa5", "destination": file("$buildDir/v1.1.11/full-armeabi-v7a.jar")],
-            ["url": "https://github.com/media-kit/libmpv-android-video-build/releases/download/v1.1.11/full-x86_64.jar", "md5": "44b7efdbaf3626d6b24afaf5d497a369", "destination": file("$buildDir/v1.1.11/full-x86_64.jar")],
-            ["url": "https://github.com/media-kit/libmpv-android-video-build/releases/download/v1.1.11/full-x86.jar", "md5": "e69a9bbd7fb587deb33dd10fecc2fecc", "destination": file("$buildDir/v1.1.11/full-x86.jar")]
+            ["url": "${libmpvBase}/full-arm64-v8a.jar", "sha256": "5e7521e57d6405c9026b5492c6c928a3f8e0a9c82d4f933935f94acea741aec2", "destination": file("$buildDir/lgpl-r1/full-arm64-v8a.jar")],
+            ["url": "${libmpvBase}/full-armeabi-v7a.jar", "sha256": "6be2439e35664a62d6bd79ad36d65ac95f1ed6f55e3cb76c8cdda31132c92b02", "destination": file("$buildDir/lgpl-r1/full-armeabi-v7a.jar")],
+            ["url": "${libmpvBase}/full-x86_64.jar", "sha256": "1626afe30713ed031a79fe1b22838f9af508c1ba1de6e97aab10d433bb8f48da", "destination": file("$buildDir/lgpl-r1/full-x86_64.jar")],
+            ["url": "${libmpvBase}/full-x86.jar", "sha256": "cab521850af1d9eef7c50839f1cc16c2a71de978b8787944d30b29f231088fce", "destination": file("$buildDir/lgpl-r1/full-x86.jar")]
         ]
 
         filesToDownload.each { fileInfo ->
             def destFile = fileInfo.destination
             if (destFile.exists()) {
-                def calculatedMD5 = MessageDigest.getInstance("MD5").digest(Files.readAllBytes(destFile.toPath())).encodeHex().toString()
+                def calculated = MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(destFile.toPath())).encodeHex().toString()
 
-                if (calculatedMD5 != fileInfo.md5) {
+                if (calculated != fileInfo.sha256) {
                     destFile.delete()
-                    println "MD5 mismatch. File deleted: ${destFile}"
+                    println "SHA-256 mismatch. File deleted: ${destFile}"
                 }
 
             }
@@ -83,9 +87,9 @@ task downloadDependencies(type: Exec) {
                     os << new URL(fileInfo.url).openStream()
                 }
 
-                def calculatedMD5 = MessageDigest.getInstance("MD5").digest(Files.readAllBytes(destFile.toPath())).encodeHex().toString()
-                if (calculatedMD5 != fileInfo.md5) {
-                    throw new GradleException("MD5 verification failed for ${destFile}")
+                def calculated = MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(destFile.toPath())).encodeHex().toString()
+                if (calculated != fileInfo.sha256) {
+                    throw new GradleException("SHA-256 verification failed for ${destFile}")
                 }
             }
 
