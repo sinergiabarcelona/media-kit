@@ -1,0 +1,98 @@
+--- a/meson.build	2026-11-07 14:43:35
++++ b/meson.build	2026-11-07 14:43:35
+@@ -417,8 +417,7 @@
+     path_source += files('osdep/path-mac.m')
+     sources += files('osdep/language-mac.c',
+                      'osdep/utils-mac.c',
+-                     'osdep/mac/app_bridge.m',
+-                     'player/clipboard/clipboard-mac.m')
++                     'osdep/mac/app_bridge.m')
+     main_fn_source = files('osdep/main-fn-mac.c')
+ endif
+ 
+@@ -1587,6 +1586,8 @@
+ 
+ swift_sources = []
+ if features['cocoa'] and features['swift']
++    # reproduko: clipboard-mac.m needs the Swift Clipboard class.
++    sources += files('player/clipboard/clipboard-mac.m')
+     swift_sources += files('osdep/mac/application.swift',
+                            'osdep/mac/app_hub.swift',
+                            'osdep/mac/clipboard.swift',
+--- a/player/clipboard/clipboard.c	2026-11-07 14:43:35
++++ b/player/clipboard/clipboard.c	2026-11-07 14:43:35
+@@ -39,7 +39,7 @@
+ #if HAVE_WIN32_DESKTOP
+     &clipboard_backend_win32,
+ #endif
+-#if HAVE_COCOA
++#if HAVE_COCOA && HAVE_SWIFT
+     &clipboard_backend_mac,
+ #endif
+ #if HAVE_WAYLAND && HAVE_WAYLAND_PROTOCOLS_1_39
+--- a/osdep/mac/app_bridge.m	2026-11-07 14:43:35
++++ b/osdep/mac/app_bridge.m	2026-11-07 14:43:35
+@@ -165,4 +165,14 @@
+ {
+     return [(Application *)[Application sharedApplication] main:argc :argv];
+ }
++#else
++// reproduko: libmpv with cocoa (for gl-cocoa / videotoolbox-gl) but without
++// the Swift app layer. The embedding app owns the window, the media keys and
++// Now Playing, so these hooks are no-ops instead of undefined symbols.
++void cocoa_init_media_keys(void) {}
++void cocoa_uninit_media_keys(void) {}
++void cocoa_set_input_context(struct input_ctx *input_context) {}
++void cocoa_set_mpv_handle(struct mpv_handle *ctx) {}
++void cocoa_init_cocoa_cb(void) {}
++int cocoa_main(int argc, char *argv[]) { return 1; }
+ #endif
+--- a/player/main.c	2026-11-07 15:07:56
++++ b/player/main.c	2026-11-07 15:07:56
+@@ -81,7 +81,7 @@
+ #include "osdep/w32_register.h"
+ #endif
+ 
+-#if HAVE_COCOA
++#if HAVE_COCOA && HAVE_SWIFT
+ #include "osdep/mac/app_bridge.h"
+ #endif
+ 
+@@ -192,7 +192,7 @@
+ 
+     osd_free(mpctx->osd);
+ 
+-#if HAVE_COCOA
++#if HAVE_COCOA && HAVE_SWIFT
+     cocoa_set_input_context(NULL);
+ #endif
+ 
+@@ -314,7 +314,7 @@
+     mp_clients_init(mpctx);
+     mpctx->osd = osd_create(mpctx->global);
+ 
+-#if HAVE_COCOA
++#if HAVE_COCOA && HAVE_SWIFT
+     cocoa_set_input_context(mpctx->input);
+ #endif
+ 
+@@ -409,7 +409,7 @@
+ 
+     MP_STATS(mpctx, "start init");
+ 
+-#if HAVE_COCOA
++#if HAVE_COCOA && HAVE_SWIFT
+     mpv_handle *ctx = mp_new_client(mpctx->clients, "mac");
+     cocoa_set_mpv_handle(ctx);
+ #endif
+--- a/input/input.c	2026-11-07 15:07:56
++++ b/input/input.c	2026-11-07 15:07:56
+@@ -1700,7 +1700,7 @@
+ {
+     m_config_cache_update(ictx->opts_cache);
+ 
+-#if HAVE_COCOA
++#if HAVE_COCOA && HAVE_SWIFT
+     struct input_opts *opts = ictx->opts;
+ 
+     if (ictx->using_cocoa_media_keys != (opts->use_media_keys && !shutdown)) {

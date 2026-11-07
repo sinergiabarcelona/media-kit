@@ -1,0 +1,40 @@
+--- a/meson.build	2025-12-21 20:08:20
++++ b/meson.build	2026-11-07 14:35:16
+@@ -412,6 +412,7 @@
+                    required: get_option('cocoa'))
+ features += {'cocoa': cocoa.found()}
+ if features['cocoa']
++    add_languages('objc', native: false)
+     dependencies += cocoa
+     path_source += files('osdep/path-mac.m')
+     sources += files('osdep/language-mac.c',
+@@ -811,6 +812,7 @@
+ }
+ features += {'audiounit': audiounit['deps'].found() and audiounit['symbol']}
+ if features['audiounit']
++    add_languages('objc', native: false)
+     dependencies += audiounit['deps']
+     sources += files('audio/out/ao_audiounit.m')
+ endif
+@@ -1427,6 +1429,7 @@
+     get_option('ios-gl').require(darwin))
+ features += {'ios-gl': ios_gl}
+ if features['ios-gl']
++    add_languages('objc', native: false)
+     sources += files('video/out/hwdec/hwdec_ios_gl.m')
+ endif
+ 
+@@ -1544,9 +1547,11 @@
+ 
+ if macos_sdk_version != '0.0'
+     message('Detected macOS SDK: ' + macos_sdk_version)
++    # reproduko: no host SDK sysroot nor -L/usr/lib -L/usr/local/lib here.
++    # The cross file already passes the right -isysroot for each SDK
++    # (macOS, iPhoneOS, iPhoneSimulator); /usr/local/lib may hold a GPL
++    # FFmpeg from Homebrew.
+     add_languages('objc', native: false)
+-    objc_link_flags = ['-isysroot', macos_sdk_path, '-L/usr/lib', '-L/usr/local/lib']
+-    add_project_link_arguments(objc_link_flags, language: ['c', 'objc'])
+ endif
+ 
+ swift = get_option('swift-build').require(

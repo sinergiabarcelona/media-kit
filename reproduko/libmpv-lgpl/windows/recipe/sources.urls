@@ -1,0 +1,18 @@
+https://ffmpeg.org/releases/ffmpeg-8.0.3.tar.xz
+https://github.com/mpv-player/mpv/archive/refs/tags/v0.41.0.tar.gz
+https://github.com/libass/libass/releases/download/0.17.4/libass-0.17.4.tar.xz
+https://download.savannah.gnu.org/releases/freetype/freetype-2.14.3.tar.xz
+https://github.com/harfbuzz/harfbuzz/releases/download/14.6.0/harfbuzz-14.6.0.tar.xz
+https://github.com/fribidi/fribidi/releases/download/v1.0.16/fribidi-1.0.16.tar.xz
+https://downloads.videolan.org/pub/videolan/dav1d/1.5.3/dav1d-1.5.3.tar.xz
+https://download.gnome.org/sources/libxml2/2.15/libxml2-2.15.4.tar.xz
+https://www.freedesktop.org/software/uchardet/releases/uchardet-0.0.8.tar.xz
+https://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.18.tar.gz
+https://github.com/madler/zlib/releases/download/v1.3.1/zlib-1.3.1.tar.xz
+https://www.nasm.us/pub/nasm/releasebuilds/2.16.03/nasm-2.16.03.tar.xz
+https://distfiles.ariadne.space/pkgconf/pkgconf-2.5.1.tar.xz
+https://github.com/mstorsjo/llvm-mingw/releases/download/20261006/llvm-mingw-20261006-ucrt-macos-universal.tar.xz
+https://github.com/ip7z/7zip/releases/download/26.04/7z2604-mac.tar.xz
+git https://code.videolan.org/videolan/libplacebo.git v7.360.1 (cee9b076f2c63104ccfd497fa79c39a867293ec4) + submódulos Vulkan-Headers 450bd2232225d6c7728a4108055ac2e37cef6475, fast_float 97b54ca9e75f5303507699d27c6b4f4efe4641a1, glad 73db193f853e2ee079bf3ca8a64aa2eaf6459043, jinja 15206881c006c79667fe5154fe80c01c65410679, markupsafe 297fc8e356e6836a62087949245d09a28e9f1b13
+https://raw.githubusercontent.com/google/angle/093a0d8f75a212cb91346362f9805ca2061f3305/include/{EGL/egl.h,EGL/eglext.h,EGL/eglext_angle.h,EGL/eglplatform.h,KHR/khrplatform.h} y LICENSE
+pip: meson==1.12.1 ninja==1.13.2 jinja2==3.1.6 markupsafe==3.0.4

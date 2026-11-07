@@ -1,0 +1,13 @@
+# Salidas y cachés de las recetas r1 (se regeneran con fetch/build/package).
+/*/dl/
+/*/src/
+/*/build/
+/*/stage/
+/*/prefix/
+/*/out/
+/*/dist/
+/*/logs/
+/*/tools/
+/*/tmp/
+/*/work/
+/*/ref-*/

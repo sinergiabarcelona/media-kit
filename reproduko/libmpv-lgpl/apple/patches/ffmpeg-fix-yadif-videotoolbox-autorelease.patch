@@ -1,0 +1,25 @@
+--- a/libavfilter/vf_yadif_videotoolbox.m
++++ b/libavfilter/vf_yadif_videotoolbox.m
+@@ -73,6 +73,11 @@
+                         int tff) API_AVAILABLE(macos(10.11), ios(8.0))
+ {
+     YADIFVTContext *s = ctx->priv;
++    // commandBuffer and computeCommandEncoder return autoreleased objects:
++    // releasing them here over-released them, and the threads that run this
++    // filter (e.g. mpv's) have no pool, so they piled up until thread exit
++    // and then crashed in objc_autoreleasePoolPop. Drain them per call.
++    @autoreleasepool {
+     id<MTLCommandBuffer> buffer = s->mtlQueue.commandBuffer;
+     id<MTLComputeCommandEncoder> encoder = buffer.computeCommandEncoder;
+     struct mtlYadifParams *params = (struct mtlYadifParams *)s->mtlParamsBuffer.contents;
+@@ -95,9 +100,7 @@
+ 
+     [buffer commit];
+     [buffer waitUntilCompleted];
+-
+-    ff_objc_release(&encoder);
+-    ff_objc_release(&buffer);
++    }
+ }
+ 
+ static void filter(AVFilterContext *ctx, AVFrame *dst,
