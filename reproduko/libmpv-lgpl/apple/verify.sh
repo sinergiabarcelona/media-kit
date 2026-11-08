@@ -69,7 +69,11 @@ else
 fi
 
 # 4. Enlaces, rutas y mínimo de SO
-case $SEG in macos-*) MIN=$MACOS_MIN ;; *) MIN=$IOS_MIN ;; esac
+case $SEG in macos-*) MIN=$MACOS_MIN ;; tvos*) MIN=$TVOS_MIN ;; *) MIN=$IOS_MIN ;; esac
+case $SEG in  # plataforma del load command LC_BUILD_VERSION
+  macos-*) PLAT=MACOS ;; ios-*) PLAT=IOS ;; iossimulator-*) PLAT=IOSSIMULATOR ;;
+  tvos-*) PLAT=TVOS ;; tvossimulator-*) PLAT=TVOSSIMULATOR ;;
+esac
 for lib in $(find "$P/lib" -maxdepth 1 -name '*.dylib' -type f); do
   b=$(basename "$lib")
   id=$(otool -D "$lib" | tail -n +2)
@@ -82,6 +86,13 @@ for lib in $(find "$P/lib" -maxdepth 1 -name '*.dylib' -type f); do
   done < <(otool -L "$lib" | tail -n +3 | awk '{print $1}')
   mo=$(vtool -show-build "$lib" | awk '/minos/ {print $2}')
   [[ $mo == "$MIN" ]] && ok "minos $b=$mo" || fail "minos $b=$mo (se esperaba $MIN)"
+  pl=$(vtool -show-build "$lib" | awk '/platform/ {print $2}')
+  [[ $pl == "$PLAT" ]] && ok "platform $b=$pl" || fail "platform $b=$pl (se esperaba $PLAT)"
+  if [[ $SEG == tvos* ]]; then
+    # tvOS no deja crear procesos: ni una referencia a fork/exec/posix_spawn/system.
+    u=$(nm -u "$lib" | grep -E '^_(fork|vfork|execv|execve|execvp|execl|execlp|execle|posix_spawn|posix_spawnp|system|sigaltstack)$' | tr '\n' ' ')
+    [[ -z $u ]] && ok "sin API prohibida en tvOS en $b" || fail "API prohibida en tvOS en $b: $u"
+  fi
   strings -a "$lib" | grep -q 'claude-501\|/Users/samuel\|scratchpad' && fail "ruta de build incrustada en $b"
   arch=$(lipo -archs "$lib"); [[ $arch == "$([[ $SEG == *amd64 ]] && echo x86_64 || echo arm64)" ]] || fail "arquitectura $b=$arch"
 done

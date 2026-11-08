@@ -1,7 +1,8 @@
 #!/bin/bash
-# libmpv LGPL-2.1+ para Apple (macOS, iOS, simulador), sin Nix.
+# libmpv LGPL-2.1+ para Apple (macOS, iOS, tvOS y sus simuladores), sin Nix.
 # Uso: build-apple.sh <segmento> [paquete...]
 #   segmento: macos-arm64 macos-amd64 ios-arm64 iossimulator-arm64 iossimulator-amd64
+#             tvos-arm64 tvossimulator-arm64 tvossimulator-amd64
 # Equivale a media-kit/libmpv-darwin-build (video-full) con mpv 0.41.0,
 # FFmpeg 8.0.3, libplacebo y SecureTransport en lugar de mbedTLS.
 # Entorno aislado: env -i, PATH sin /usr/local ni /opt/homebrew/bin,
@@ -29,9 +30,19 @@ case $SEG in
   ios-arm64)          SDK=iphoneos;        ARCH=arm64;  CPUF=aarch64; SUB=ios;           TRIPLE=arm64-apple-ios$IOS_MIN ;;
   iossimulator-arm64) SDK=iphonesimulator; ARCH=arm64;  CPUF=aarch64; SUB=ios-simulator; TRIPLE=arm64-apple-ios$IOS_MIN-simulator ;;
   iossimulator-amd64) SDK=iphonesimulator; ARCH=x86_64; CPUF=x86_64;  SUB=ios-simulator; TRIPLE=x86_64-apple-ios$IOS_MIN-simulator ;;
+  # tvOS: mismas opciones que iOS (OpenGL ES por EAGL y AudioUnit). El SDK marca
+  # fork/exec/posix_spawn como no disponibles: mpv cae solo en subprocess-dummy.
+  tvos-arm64)          SDK=appletvos;        ARCH=arm64;  CPUF=aarch64; SUB=tvos;           TRIPLE=arm64-apple-tvos$TVOS_MIN ;;
+  tvossimulator-arm64) SDK=appletvsimulator; ARCH=arm64;  CPUF=aarch64; SUB=tvos-simulator; TRIPLE=arm64-apple-tvos$TVOS_MIN-simulator ;;
+  tvossimulator-amd64) SDK=appletvsimulator; ARCH=x86_64; CPUF=x86_64;  SUB=tvos-simulator; TRIPLE=x86_64-apple-tvos$TVOS_MIN-simulator ;;
   *) echo "segmento desconocido: $SEG"; exit 2 ;;
 esac
 OS=${SEG%%-*}
+case $OS in  # familia: decide CMAKE_SYSTEM_NAME y el mínimo de SO
+  macos) CM_SYS=Darwin; OS_MIN=$MACOS_MIN ;;
+  ios|iossimulator) CM_SYS=iOS; OS_MIN=$IOS_MIN ;;
+  tvos|tvossimulator) CM_SYS=tvOS; OS_MIN=$TVOS_MIN ;;
+esac
 SYSROOT=$(xcrun --sdk $SDK --show-sdk-path)
 PREFIX=/reproduko/$SEG           # prefijo lógico (neutro; queda en .pc y en la cadena de configure)
 STAGE=$ROOT/stage/$SEG           # DESTDIR real
@@ -121,11 +132,10 @@ msetup() { # msetup <nombre> <src> [opciones meson...]
 
 csetup() { # csetup <nombre> <src> [opciones cmake...]
   local n=$1 s=$2; shift 2
-  local sysname=Darwin; [[ $OS != macos ]] && sysname=iOS
   rm -rf "$B/$n"
   cmake -S "$s" -B "$B/$n" -G Ninja -DCMAKE_MAKE_PROGRAM="$ROOT/tools/venv/bin/ninja" \
-    -DCMAKE_SYSTEM_NAME=$sysname -DCMAKE_OSX_SYSROOT="$SYSROOT" -DCMAKE_OSX_ARCHITECTURES=$ARCH \
-    -DCMAKE_OSX_DEPLOYMENT_TARGET=$([[ $OS == macos ]] && echo $MACOS_MIN || echo $IOS_MIN) \
+    -DCMAKE_SYSTEM_NAME=$CM_SYS -DCMAKE_OSX_SYSROOT="$SYSROOT" -DCMAKE_OSX_ARCHITECTURES=$ARCH \
+    -DCMAKE_OSX_DEPLOYMENT_TARGET=$OS_MIN \
     -DCMAKE_C_COMPILER="$XC/clang" -DCMAKE_CXX_COMPILER="$XC/clang++" \
     -DCMAKE_C_FLAGS="-target $TRIPLE $MAP" -DCMAKE_CXX_FLAGS="-target $TRIPLE $MAP" \
     -DCMAKE_SHARED_LINKER_FLAGS="-target $TRIPLE -Wl,-headerpad_max_install_names" \
@@ -212,7 +222,7 @@ b_mpv() {
   local os_opts=()
   if [[ $OS == macos ]]; then
     os_opts=(-Dcocoa=enabled -Dgl-cocoa=enabled -Dvideotoolbox-gl=enabled -Dcoreaudio=enabled -Daudiounit=disabled)
-  else
+  else  # iOS y tvOS
     os_opts=(-Daudiounit=enabled -Dios-gl=enabled -Dvideotoolbox-gl=disabled -Dcocoa=disabled -Dcoreaudio=disabled)
   fi
   msetup mpv "$SRC/mpv-$MPV_VERSION" -Dauto_features=disabled --buildtype=debugoptimized \

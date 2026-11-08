@@ -1,14 +1,16 @@
 #!/bin/bash
-# package-apple.sh <macos|ios> [etiqueta]
+# package-apple.sh <macos|ios|tvos> [etiqueta]
 # Convierte las dylib de stage/<segmento> en <Nombre>.framework (id
 # @rpath/<Nombre>.framework/[Versions/A/]<Nombre>), las une en xcframework y
 # empaqueta el tar.gz con el mismo contrato que media-kit/libmpv-darwin-build:
 #   libmpv-xcframeworks_<etiqueta>_<os>-universal-video-full/<Nombre>.xcframework
 # macos: macos-arm64 + macos-amd64 (lipo) -> macos-arm64_x86_64
 # ios:   ios-arm64 -> ios-arm64 ; iossimulator-arm64 + iossimulator-amd64 -> ios-arm64_x86_64-simulator
+# tvos:  tvos-arm64 -> tvos-arm64 ; tvossimulator-arm64 + tvossimulator-amd64 -> tvos-arm64_x86_64-simulator
+#        (frameworks planos, como en iOS)
 set -euo pipefail
 ROOT=$(cd "$(dirname "$0")" && pwd)
-OS=${1:?macos|ios}; TAG=${2:-lgpl-r2}
+OS=${1:?macos|ios|tvos}; TAG=${2:-lgpl-r2}
 DIST=$ROOT/dist; OUT=$ROOT/out/$OS; DSYM=$ROOT/out/dsym-$OS
 rm -rf "$OUT" "$DSYM"; mkdir -p "$OUT" "$DSYM" "$DIST"
 
@@ -20,6 +22,7 @@ Png16:libpng16 Swresample:libswresample Swscale:libswscale Uchardet:libuchardet 
 case $OS in
   macos) GROUPS_="macos:macos-arm64,macos-amd64" ; PLIST_KEY=LSMinimumSystemVersion ;;
   ios)   GROUPS_="ios:ios-arm64 iossimulator:iossimulator-arm64,iossimulator-amd64" ; PLIST_KEY=MinimumOSVersion ;;
+  tvos)  GROUPS_="tvos:tvos-arm64 tvossimulator:tvossimulator-arm64,tvossimulator-amd64" ; PLIST_KEY=MinimumOSVersion ;;
   *) exit 2 ;;
 esac
 
