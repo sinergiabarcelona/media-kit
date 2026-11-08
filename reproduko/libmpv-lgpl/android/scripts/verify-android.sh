@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Verificación de un libmpv.so Android (receta LGPL r1). Falla (exit 1) si algo
+# Verificación de un libmpv.so Android (receta LGPL r2). Falla (exit 1) si algo
 # no se cumple. Uso: verify-android.sh <abi> <libmpv.so> <dir-con-config_components.h>
 set -uo pipefail
 ABI=$1 SO=$2 CFG=$3
@@ -68,12 +68,14 @@ grep -q '/private/tmp\|/Users/' <<< "$text" && ko "rutas del host en el binario:
 #    de mpv, se compilan siempre en FFmpeg 8 y no tienen CONFIG_*) / config_components.h
 cfg() { awk -v k="$1" '$1=="#define" && $2==k {print $3}' "$CFG/config.h" "$CFG/config_components.h"; }
 want() { local k v=$1; shift; for k in "$@"; do [[ $(cfg "$k") == "$v" ]] || ko "$k != $v"; done; }
-want 0 CONFIG_GPL CONFIG_VERSION3 CONFIG_NONFREE CONFIG_TRUEHD_DECODER CONFIG_MLP_DECODER CONFIG_VVC_DECODER
+# r2: sin decoders E-AC-3 (eac3) ni DTS (dca); AC-3 sí (ac3 y ac3_fixed).
+want 0 CONFIG_GPL CONFIG_VERSION3 CONFIG_NONFREE CONFIG_TRUEHD_DECODER CONFIG_MLP_DECODER CONFIG_VVC_DECODER \
+  CONFIG_EAC3_DECODER CONFIG_DCA_DECODER
 want 1 CONFIG_MLP_PARSER CONFIG_AC3_PARSER CONFIG_DCA_PARSER \
   CONFIG_TRUEHD_DEMUXER CONFIG_MLP_DEMUXER CONFIG_DTS_DEMUXER CONFIG_DTSHD_DEMUXER CONFIG_SPDIF_DEMUXER CONFIG_AC3_DEMUXER CONFIG_EAC3_DEMUXER \
   CONFIG_SPDIF_MUXER CONFIG_OPENSSL CONFIG_HTTPS_PROTOCOL CONFIG_TLS_PROTOCOL CONFIG_MEDIACODEC CONFIG_JNI \
   CONFIG_LIBDAV1D CONFIG_LIBXML2 CONFIG_ZLIB CONFIG_DASH_DEMUXER CONFIG_HLS_DEMUXER HAVE_PTHREADS \
-  CONFIG_AC3_DECODER CONFIG_EAC3_DECODER CONFIG_DCA_DECODER CONFIG_FFV1_DECODER CONFIG_HEVC_DECODER CONFIG_H264_DECODER \
+  CONFIG_AC3_DECODER CONFIG_AC3_FIXED_DECODER CONFIG_FFV1_DECODER CONFIG_HEVC_DECODER CONFIG_H264_DECODER \
   CONFIG_AV1_DECODER CONFIG_LIBDAV1D_DECODER CONFIG_H264_MEDIACODEC_DECODER CONFIG_HEVC_MEDIACODEC_DECODER \
   CONFIG_PNG_ENCODER CONFIG_MJPEG_ENCODER
 for f in overlay equalizer yadif bwdif scale format null hwdownload hwupload aresample aformat anull volume pan \

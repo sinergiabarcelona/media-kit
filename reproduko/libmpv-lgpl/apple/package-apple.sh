@@ -8,7 +8,7 @@
 # ios:   ios-arm64 -> ios-arm64 ; iossimulator-arm64 + iossimulator-amd64 -> ios-arm64_x86_64-simulator
 set -euo pipefail
 ROOT=$(cd "$(dirname "$0")" && pwd)
-OS=${1:?macos|ios}; TAG=${2:-lgpl-r1}
+OS=${1:?macos|ios}; TAG=${2:-lgpl-r2}
 DIST=$ROOT/dist; OUT=$ROOT/out/$OS; DSYM=$ROOT/out/dsym-$OS
 rm -rf "$OUT" "$DSYM"; mkdir -p "$OUT" "$DSYM" "$DIST"
 
@@ -117,4 +117,23 @@ for e in $LIBS; do
 done
 ( cd "$ROOT/out/xc-$OS" && tar --uid 0 --gid 0 --uname root --gname wheel -czf "$DIST/$NAME.tar.gz" "$NAME" )
 ( cd "$DSYM" && zip -qry "$DIST/debug-symbols-$OS-$TAG.zip" . )
+
+# configure-apple-<segmento>.txt: licencia, línea de configure de FFmpeg,
+# Configuration de mpv y sus features, tal como quedaron en la build (LGPL §6).
+source "$ROOT/versions.env"
+for G in $GROUPS_; do
+  for s in ${G#*:}; do s=${s//,/ }; for seg in $s; do
+    L=$ROOT/logs/$seg; MC=$ROOT/build/$seg/mpv/config.h
+    {
+      echo "# libmpv LGPL ${TAG#lgpl-} — $seg"
+      echo "# avcodec_license(): $(sed -n 's/^#define FFMPEG_LICENSE "\(.*\)"$/\1/p' "$L/config.h")"
+      echo "# FFmpeg $FFMPEG_VERSION avcodec_configuration():"
+      sed -n 's/^#define FFMPEG_CONFIGURATION "\(.*\)"$/\1/p' "$L/config.h"
+      echo "# mpv $MPV_VERSION Configuration:"
+      sed -n 's/^#define CONFIGURATION "\(.*\)"$/\1/p' "$MC"
+      echo "# mpv features:"
+      grep -m1 -o 'List of enabled features: .*' "$L/mpv-features.txt"
+    } > "$DIST/configure-apple-$seg.txt"
+  done; done
+done
 echo "$DIST/$NAME.tar.gz"

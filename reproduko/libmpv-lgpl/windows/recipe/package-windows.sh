@@ -12,7 +12,7 @@
 # (la misma estructura que mpv-dev-x86_64-20241021-git-0f78584.7z).
 # Uso: package-windows.sh <x86_64|aarch64> [rev]
 set -euo pipefail
-ARCH=$1 REV=${2:-lgpl-r1}
+ARCH=$1 REV=${2:-lgpl-r2}
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd); ROOT=$(cd "$HERE/.." && pwd -P)
 source "$HERE/versions.env"
 BIN=$ROOT/tools/$LLVM_MINGW_DIR/bin

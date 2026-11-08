@@ -47,3 +47,20 @@ libmpv-win32-video-cmake. Binarios en la Release `libmpv-lgpl-r1` de este fork.
   que había usado `yadif_videotoolbox`.
 - Cada Release debe llevar, junto a los binarios, las fuentes exactas, estas
   recetas y las líneas de configure (LGPL-2.1, sección 6).
+
+## r2: sin decoders E-AC-3 ni DTS (2026-11-08)
+
+Las mismas recetas y fuentes que r1, con una sola diferencia en FFmpeg:
+`--disable-decoder=truehd,mlp,vvc,eac3,dca`. Binarios en la Release
+`libmpv-lgpl-r2` de este fork.
+
+- Fuera, por patentes, los decoders `eac3` (E-AC-3, Dolby Digital Plus) y `dca`
+  (DTS, DTS-HD), como ya lo estaban `truehd`, `mlp` y `vvc`.
+- Siguen `ac3` y `ac3_fixed` (la patente de AC-3 venció en 2017), los parsers `ac3`
+  (que también cubre E-AC-3) y `dca`, los demuxers `ac3`, `eac3`, `dts`, `dtshd`,
+  `truehd` y `spdif`, y el muxer `spdif`: DTS, DTS-HD, E-AC-3 y TrueHD siguen
+  saliendo sin decodificar por `audio-spdif` hacia un amplificador.
+- En Apple, E-AC-3 lo decodifica el sistema (`eac3_at` de AudioToolbox), y AC-3
+  `ac3_at` o `ac3`. DTS no tiene decoder en ninguna plataforma.
+- `verify*.sh` exige `CONFIG_EAC3_DECODER=0` y `CONFIG_DCA_DECODER=0`, y
+  `package-apple.sh` escribe también `dist/configure-apple-<segmento>.txt`.

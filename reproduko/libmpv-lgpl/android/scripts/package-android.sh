@@ -22,7 +22,7 @@ for a in "${ABIS[@]}"; do
   strings -a "$so" > "$STAGE/strings-$a.txt"
   st=$STAGE/strings-$a.txt
   {
-    echo "# libmpv LGPL r1, Android $a"
+    echo "# libmpv LGPL r2, Android $a"
     echo "# mpv: $(grep -m1 -E '^mpv v0\.41' "$st")"
     echo "# FFmpeg: $(grep -m1 -E '^FFmpeg version 8\.0' "$st")"
     grep -m1 -- '^--disable-autodetect' "$st"

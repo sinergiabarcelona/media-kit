@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# libmpv LGPL-2.1+ para Android (reproduko, receta propia r1).
+# libmpv LGPL-2.1+ para Android (reproduko, receta propia; r2 desde 2026-11-08).
 # mpv v0.41.0 + FFmpeg n8.0.3 + libplacebo v7.360.1, todo estático dentro de un
 # único libmpv.so por ABI, con libc++ estático y solo mpv_* exportado.
 #
@@ -163,7 +163,7 @@ ffmpeg_flags() {
     --disable-gpl --disable-nonfree --disable-version3
     --enable-avcodec --enable-avformat --enable-avfilter --enable-swresample --enable-swscale
     --disable-vulkan --disable-iconv --disable-bzlib --disable-lzma --enable-zlib --enable-libdav1d --enable-libxml2
-    --enable-decoders --disable-decoder=truehd,mlp,vvc --enable-parsers --enable-demuxers --enable-bsfs --enable-hwaccels --enable-protocols
+    --enable-decoders --disable-decoder=truehd,mlp,vvc,eac3,dca --enable-parsers --enable-demuxers --enable-bsfs --enable-hwaccels --enable-protocols
     --disable-encoders --enable-encoder=png,mjpeg,ljpeg,jpegls,jpeg2000
     --disable-muxers --enable-muxer=spdif
     --disable-filters --enable-filter=overlay,equalizer,yadif,bwdif,scale,format,null,hwdownload,hwupload,aresample,aformat,anull,volume,pan,loudnorm,dynaudnorm,acompressor,alimiter,speechnorm
@@ -224,6 +224,7 @@ EOF
 
 prepare_sources() {
   # Árboles parcheados compartidos por todas las ABI (build fuera del árbol).
+  mkdir -p "$ROOT/work"
   if [[ ! -f $ROOT/work/.ffmpeg-ok ]]; then
     rm -rf "$ROOT/work/ffmpeg-src"; cp -R "$SRC/ffmpeg-8.0.3" "$ROOT/work/ffmpeg-src"
     for p in "$PATCHES"/ffmpeg/*.patch; do patch -p1 -d "$ROOT/work/ffmpeg-src" < "$p"; done
