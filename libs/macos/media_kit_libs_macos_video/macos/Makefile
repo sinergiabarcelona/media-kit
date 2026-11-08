@@ -1,10 +1,10 @@
 all: Frameworks/*.xcframework Frameworks/.symlinks
 
-MPV_XCFRAMEWORKS_VERSION ?= lgpl-r1
-MPV_XCFRAMEWORKS_SHA256SUM ?= 1de22f27e56193fd0b26052019c701ed906dca85f026157865eacb6c3490b8c5
+MPV_XCFRAMEWORKS_VERSION ?= lgpl-r2
+MPV_XCFRAMEWORKS_SHA256SUM ?= 2c1e6200210cac434f1f80cfbfd7f506525e20747a33b90c75e063812af2f115
 # reproduko: libmpv LGPL propio (receta reproduko/libmpv-lgpl). Se puede
 # sobreescribir desde el entorno (el podspec ejecuta `make`).
-MPV_XCFRAMEWORKS_URL ?= https://github.com/sinergiabarcelona/media-kit/releases/download/libmpv-lgpl-r1/libmpv-xcframeworks_lgpl-r1_macos-universal-video-full.tar.gz
+MPV_XCFRAMEWORKS_URL ?= https://github.com/sinergiabarcelona/media-kit/releases/download/libmpv-lgpl-r2/libmpv-xcframeworks_lgpl-r2_macos-universal-video-full.tar.gz
 
 TAR=tar
 TAR_WILDCARDS_FLAG := $(shell ${TAR} --version 2>&1 | grep -q 'GNU' && echo "--wildcards" || echo "")

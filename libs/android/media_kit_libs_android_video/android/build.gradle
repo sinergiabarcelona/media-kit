@@ -58,14 +58,15 @@ task downloadDependencies(type: Exec) {
 
         // Download all *.jar dependencies & verify their SHA-256 checksums.
         // reproduko: libmpv LGPL-2.1+ propio (mpv 0.41.0, FFmpeg 8.0.3), Release
-        // libmpv-lgpl-r1 del fork. REPRODUKO_LIBMPV_BASE_URL (p. ej. file:///.../dist)
-        // sustituye la URL base para probar binarios locales; el hash no cambia.
-        def libmpvBase = System.getenv("REPRODUKO_LIBMPV_BASE_URL") ?: "https://github.com/sinergiabarcelona/media-kit/releases/download/libmpv-lgpl-r1"
+        // libmpv-lgpl-r2 del fork (sin decoders TrueHD, MLP, VVC, E-AC-3 ni DTS).
+        // REPRODUKO_LIBMPV_BASE_URL (p. ej. file:///.../dist) sustituye la URL base
+        // para probar binarios locales; el hash no cambia.
+        def libmpvBase = System.getenv("REPRODUKO_LIBMPV_BASE_URL") ?: "https://github.com/sinergiabarcelona/media-kit/releases/download/libmpv-lgpl-r2"
         def filesToDownload = [
-            ["url": "${libmpvBase}/full-arm64-v8a.jar", "sha256": "5e7521e57d6405c9026b5492c6c928a3f8e0a9c82d4f933935f94acea741aec2", "destination": file("$buildDir/lgpl-r1/full-arm64-v8a.jar")],
-            ["url": "${libmpvBase}/full-armeabi-v7a.jar", "sha256": "6be2439e35664a62d6bd79ad36d65ac95f1ed6f55e3cb76c8cdda31132c92b02", "destination": file("$buildDir/lgpl-r1/full-armeabi-v7a.jar")],
-            ["url": "${libmpvBase}/full-x86_64.jar", "sha256": "1626afe30713ed031a79fe1b22838f9af508c1ba1de6e97aab10d433bb8f48da", "destination": file("$buildDir/lgpl-r1/full-x86_64.jar")],
-            ["url": "${libmpvBase}/full-x86.jar", "sha256": "cab521850af1d9eef7c50839f1cc16c2a71de978b8787944d30b29f231088fce", "destination": file("$buildDir/lgpl-r1/full-x86.jar")]
+            ["url": "${libmpvBase}/full-arm64-v8a.jar", "sha256": "f110fe76197565e2f1bf84b70385bc3f9e79b718a57328b138ced41221fc42e5", "destination": file("$buildDir/lgpl-r2/full-arm64-v8a.jar")],
+            ["url": "${libmpvBase}/full-armeabi-v7a.jar", "sha256": "163c2b48adebafa8e8421749de96ebc05fd337b02ca584dc344dac87fcf66c5d", "destination": file("$buildDir/lgpl-r2/full-armeabi-v7a.jar")],
+            ["url": "${libmpvBase}/full-x86_64.jar", "sha256": "898074ce67212ea1a4fc6c7e3b2299ece37cb908a4be78d734f0c892887620fa", "destination": file("$buildDir/lgpl-r2/full-x86_64.jar")],
+            ["url": "${libmpvBase}/full-x86.jar", "sha256": "17c205f1fc2f1975629ff04b196104963160142f3ddfba0948f3ae3d0248a0a8", "destination": file("$buildDir/lgpl-r2/full-x86.jar")]
         ]
 
         filesToDownload.each { fileInfo ->

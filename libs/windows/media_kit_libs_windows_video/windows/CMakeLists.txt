@@ -73,22 +73,22 @@ endfunction()
 
 # Detect architecture and set appropriate libmpv archive.
 # reproduko: libmpv LGPL-2.1+ propia (mpv 0.41.0, FFmpeg 8.0.3), receta en
-# reproduko/libmpv-lgpl/. El aarch64 está compilado pero sin probar: ANGLE.7z
-# (v1.0.1) solo trae DLL x64.
-set(LIBMPV_REV "lgpl-r1")
+# reproduko/libmpv-lgpl/; r2, sin decoders TrueHD, MLP, VVC, E-AC-3 ni DTS. El
+# aarch64 está compilado pero sin probar: ANGLE.7z (v1.0.1) solo trae DLL x64.
+set(LIBMPV_REV "lgpl-r2")
 if(${FLUTTER_TARGET_PLATFORM} STREQUAL "windows-x64")
   set(LIBMPV_ARCH "x86_64")
   set(LIBMPV "mpv-dev-x86_64-${LIBMPV_REV}.7z")
-  set(LIBMPV_MD5 "d688432100d4b767a62be88d297a544e84d58c603037169ae84a5c31c47a5471")
+  set(LIBMPV_MD5 "dc78aee25fcd3f374ab776ea8c403b5b9fcf05acd782d17a768e6731a73efa24")
 else()
   set(LIBMPV_ARCH "aarch64")
   set(LIBMPV "mpv-dev-aarch64-${LIBMPV_REV}.7z")
-  set(LIBMPV_MD5 "358cf453f864fcf11f8f491682659a2c968c818842521aafb53094348c517256")
+  set(LIBMPV_MD5 "92880e71e2d20fe3a954c6b2061164d4ec5a205e67dbaf2eef5065e2bd3ba816")
 endif()
 
 # Download URL for the libmpv archive (SHA256 in LIBMPV_MD5).
 set(LIBMPV_URL "https://github.com/sinergiabarcelona/media-kit/releases/download/libmpv-${LIBMPV_REV}/${LIBMPV}")
-# Pruebas locales: REPRODUKO_LIBMPV_URL=file:///C:/ruta/mpv-dev-x86_64-lgpl-r1.7z
+# Pruebas locales: REPRODUKO_LIBMPV_URL=file:///C:/ruta/mpv-dev-x86_64-lgpl-r2.7z
 # (el hash se sigue comprobando).
 if(DEFINED ENV{REPRODUKO_LIBMPV_URL})
   set(LIBMPV_URL "$ENV{REPRODUKO_LIBMPV_URL}")
@@ -96,6 +96,9 @@ endif()
 
 # Download location of the libmpv archive.
 set(LIBMPV_ARCHIVE "${CMAKE_BINARY_DIR}/${LIBMPV}")
+# reproduko: solo se extrae si esta carpeta está vacía, y media_kit_video la busca
+# en esta misma ruta: al cambiar de LIBMPV_REV hay que borrar build/windows (o
+# `flutter clean`), o seguiría la DLL de la revisión anterior.
 set(LIBMPV_SRC "${CMAKE_BINARY_DIR}/libmpv")
 
 download_and_verify(
