@@ -1,8 +1,9 @@
 #!/bin/bash
-# libmpv LGPL-2.1+ para Apple (macOS, iOS, tvOS y sus simuladores), sin Nix.
+# libmpv LGPL-2.1+ para Apple (macOS, iOS, tvOS, visionOS y sus simuladores), sin Nix.
 # Uso: build-apple.sh <segmento> [paquete...]
 #   segmento: macos-arm64 macos-amd64 ios-arm64 iossimulator-arm64 iossimulator-amd64
 #             tvos-arm64 tvossimulator-arm64 tvossimulator-amd64
+#             xros-arm64 xrossimulator-arm64 xrossimulator-amd64
 # Equivale a media-kit/libmpv-darwin-build (video-full) con mpv 0.41.0,
 # FFmpeg 8.0.3, libplacebo y SecureTransport en lugar de mbedTLS.
 # Entorno aislado: env -i, PATH sin /usr/local ni /opt/homebrew/bin,
@@ -35,6 +36,12 @@ case $SEG in
   tvos-arm64)          SDK=appletvos;        ARCH=arm64;  CPUF=aarch64; SUB=tvos;           TRIPLE=arm64-apple-tvos$TVOS_MIN ;;
   tvossimulator-arm64) SDK=appletvsimulator; ARCH=arm64;  CPUF=aarch64; SUB=tvos-simulator; TRIPLE=arm64-apple-tvos$TVOS_MIN-simulator ;;
   tvossimulator-amd64) SDK=appletvsimulator; ARCH=x86_64; CPUF=x86_64;  SUB=tvos-simulator; TRIPLE=x86_64-apple-tvos$TVOS_MIN-simulator ;;
+  # visionOS: mismas opciones de códec que iOS/tvOS. El render de la app es a
+  # textura (API SW de libmpv), no EAGL; meson usa subsystem ios para activar
+  # AudioUnit (mpv 0.41 no tiene 'xros'). OpenGLES está en el SDK, por si acaso.
+  xros-arm64)           SDK=xros;          ARCH=arm64;  CPUF=aarch64; SUB=ios;           TRIPLE=arm64-apple-xros$XROS_MIN ;;
+  xrossimulator-arm64)  SDK=xrsimulator;   ARCH=arm64;  CPUF=aarch64; SUB=ios-simulator; TRIPLE=arm64-apple-xros$XROS_MIN-simulator ;;
+  xrossimulator-amd64)  SDK=xrsimulator;   ARCH=x86_64; CPUF=x86_64;  SUB=ios-simulator; TRIPLE=x86_64-apple-xros$XROS_MIN-simulator ;;
   *) echo "segmento desconocido: $SEG"; exit 2 ;;
 esac
 OS=${SEG%%-*}
@@ -42,6 +49,7 @@ case $OS in  # familia: decide CMAKE_SYSTEM_NAME y el mínimo de SO
   macos) CM_SYS=Darwin; OS_MIN=$MACOS_MIN ;;
   ios|iossimulator) CM_SYS=iOS; OS_MIN=$IOS_MIN ;;
   tvos|tvossimulator) CM_SYS=tvOS; OS_MIN=$TVOS_MIN ;;
+  xros|xrossimulator) CM_SYS=visionOS; OS_MIN=$XROS_MIN ;;
 esac
 SYSROOT=$(xcrun --sdk $SDK --show-sdk-path)
 PREFIX=/reproduko/$SEG           # prefijo lógico (neutro; queda en .pc y en la cadena de configure)
@@ -219,15 +227,20 @@ b_ffmpeg() {
   make -C "$B/$n" install DESTDIR="$STAGE" > "$LOG/$n.install.log" 2>&1 || { tail -20 "$LOG/$n.install.log"; exit 1; }
 }
 b_mpv() {
-  local os_opts=()
+  local os_opts=() gl_opts=(-Dgl=enabled -Dplain-gl=enabled)
   if [[ $OS == macos ]]; then
     os_opts=(-Dcocoa=enabled -Dgl-cocoa=enabled -Dvideotoolbox-gl=enabled -Dcoreaudio=enabled -Daudiounit=disabled)
+  elif [[ $OS == xros || $OS == xrossimulator ]]; then
+    # La app pinta con la API SW de libmpv a Metal. OpenGL ES / EAGL no están
+    # disponibles en visionOS (CVOpenGLESTexture* está API_UNAVAILABLE).
+    os_opts=(-Daudiounit=enabled -Dios-gl=disabled -Dvideotoolbox-gl=disabled -Dcocoa=disabled -Dcoreaudio=disabled)
+    gl_opts=(-Dgl=disabled -Dplain-gl=disabled)
   else  # iOS y tvOS
     os_opts=(-Daudiounit=enabled -Dios-gl=enabled -Dvideotoolbox-gl=disabled -Dcocoa=disabled -Dcoreaudio=disabled)
   fi
   msetup mpv "$SRC/mpv-$MPV_VERSION" -Dauto_features=disabled --buildtype=debugoptimized \
     -Dgpl=false -Dlibmpv=true -Dcplayer=false -Dtests=false -Dfuzzers=false -Dbuild-date=false \
-    -Dgl=enabled -Dplain-gl=enabled -Dzlib=enabled -Duchardet=enabled -Diconv=enabled \
+    "${gl_opts[@]}" -Dzlib=enabled -Duchardet=enabled -Diconv=enabled \
     -Dvideotoolbox-pl=disabled -Davfoundation=disabled -Dswift-build=disabled \
     -Dmacos-cocoa-cb=disabled -Dmacos-media-player=disabled -Dmacos-touchbar=disabled \
     "${os_opts[@]}"

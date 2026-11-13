@@ -58,21 +58,31 @@ echo "INFO decoders=$nd demuxers=$ndm parsers=$np filters=$nf muxers=$nm encoder
 (( nm == 1 )) || fail "muxers=$nm (solo spdif)"
 
 # 3. mpv
-for m in HAVE_LIBPLACEBO HAVE_UCHARDET HAVE_ICONV HAVE_ZLIB HAVE_GL HAVE_LIBASS; do want "$MC" $m 1; done
+# visionOS pinta con la API SW (sin OpenGL ES). iOS/tvOS sí llevan GL.
+if [[ $SEG == xros* ]]; then
+  for m in HAVE_LIBPLACEBO HAVE_UCHARDET HAVE_ICONV HAVE_ZLIB HAVE_LIBASS; do want "$MC" $m 1; done
+  want "$MC" HAVE_GL 0
+else
+  for m in HAVE_LIBPLACEBO HAVE_UCHARDET HAVE_ICONV HAVE_ZLIB HAVE_GL HAVE_LIBASS; do want "$MC" $m 1; done
+fi
 for m in HAVE_LUA HAVE_JAVASCRIPT HAVE_LIBARCHIVE HAVE_LIBBLURAY HAVE_RUBBERBAND HAVE_VULKAN HAVE_SWIFT; do want "$MC" $m 0; done
 if [[ $SEG == macos-* ]]; then
   for m in HAVE_COCOA HAVE_GL_COCOA HAVE_VIDEOTOOLBOX_GL HAVE_COREAUDIO; do want "$MC" $m 1; done
   want "$MC" HAVE_AUDIOUNIT 0
+elif [[ $SEG == xros* ]]; then
+  want "$MC" HAVE_AUDIOUNIT 1
+  for m in HAVE_IOS_GL HAVE_COCOA HAVE_VIDEOTOOLBOX_GL HAVE_COREAUDIO; do want "$MC" $m 0; done
 else
   for m in HAVE_AUDIOUNIT HAVE_IOS_GL; do want "$MC" $m 1; done
   for m in HAVE_COCOA HAVE_VIDEOTOOLBOX_GL HAVE_COREAUDIO; do want "$MC" $m 0; done
 fi
 
 # 4. Enlaces, rutas y mínimo de SO
-case $SEG in macos-*) MIN=$MACOS_MIN ;; tvos*) MIN=$TVOS_MIN ;; *) MIN=$IOS_MIN ;; esac
+case $SEG in macos-*) MIN=$MACOS_MIN ;; tvos*) MIN=$TVOS_MIN ;; xros*) MIN=$XROS_MIN ;; *) MIN=$IOS_MIN ;; esac
 case $SEG in  # plataforma del load command LC_BUILD_VERSION
   macos-*) PLAT=MACOS ;; ios-*) PLAT=IOS ;; iossimulator-*) PLAT=IOSSIMULATOR ;;
   tvos-*) PLAT=TVOS ;; tvossimulator-*) PLAT=TVOSSIMULATOR ;;
+  xros-*) PLAT=VISIONOS ;; xrossimulator-*) PLAT=VISIONOSSIMULATOR ;;
 esac
 for lib in $(find "$P/lib" -maxdepth 1 -name '*.dylib' -type f); do
   b=$(basename "$lib")

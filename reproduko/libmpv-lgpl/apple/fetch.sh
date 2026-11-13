@@ -34,7 +34,7 @@ for f in ffmpeg-$FFMPEG_VERSION.tar.xz mpv-$MPV_VERSION.tar.gz libass-$LIBASS_VE
 done
 mkdir -p "$SRC/libplacebo-$LIBPLACEBO_VERSION"
 ( cd "$DL/libplacebo-git" && tar --exclude=.git -cf - . ) | tar xf - -C "$SRC/libplacebo-$LIBPLACEBO_VERSION"
-for p in ffmpeg-fix-dash-base-url-escape ffmpeg-fix-hls-mp4-seek ffmpeg-fix-ios-hdr-texture ffmpeg-fix-vp9-hwaccel-8.0 ffmpeg-fix-yadif-videotoolbox-autorelease; do
+for p in ffmpeg-fix-dash-base-url-escape ffmpeg-fix-hls-mp4-seek ffmpeg-fix-ios-hdr-texture ffmpeg-fix-vp9-hwaccel-8.0 ffmpeg-fix-yadif-videotoolbox-autorelease ffmpeg-fix-visionos-vt-metal; do
   patch -d "$SRC/ffmpeg-$FFMPEG_VERSION" -p1 -s --no-backup-if-mismatch < "$ROOT/patches/$p.patch"
 done
 for p in mpv-darwin-no-host-sdk mpv-audiounit-shared-session mpv-cocoa-without-swift mpv-coreaudio-channelmap-macos27; do

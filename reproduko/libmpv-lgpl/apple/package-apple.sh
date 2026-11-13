@@ -1,5 +1,5 @@
 #!/bin/bash
-# package-apple.sh <macos|ios|tvos> [etiqueta]
+# package-apple.sh <macos|ios|tvos|visionos> [etiqueta]
 # Convierte las dylib de stage/<segmento> en <Nombre>.framework (id
 # @rpath/<Nombre>.framework/[Versions/A/]<Nombre>), las une en xcframework y
 # empaqueta el tar.gz con el mismo contrato que media-kit/libmpv-darwin-build:
@@ -10,7 +10,7 @@
 #        (frameworks planos, como en iOS)
 set -euo pipefail
 ROOT=$(cd "$(dirname "$0")" && pwd)
-OS=${1:?macos|ios|tvos}; TAG=${2:-lgpl-r2}
+OS=${1:?macos|ios|tvos|visionos}; TAG=${2:-lgpl-r2}
 DIST=$ROOT/dist; OUT=$ROOT/out/$OS; DSYM=$ROOT/out/dsym-$OS
 rm -rf "$OUT" "$DSYM"; mkdir -p "$OUT" "$DSYM" "$DIST"
 
@@ -23,6 +23,13 @@ case $OS in
   macos) GROUPS_="macos:macos-arm64,macos-amd64" ; PLIST_KEY=LSMinimumSystemVersion ;;
   ios)   GROUPS_="ios:ios-arm64 iossimulator:iossimulator-arm64,iossimulator-amd64" ; PLIST_KEY=MinimumOSVersion ;;
   tvos)  GROUPS_="tvos:tvos-arm64 tvossimulator:tvossimulator-arm64,tvossimulator-amd64" ; PLIST_KEY=MinimumOSVersion ;;
+  visionos)
+    if [[ ${VISIONOS_SIM_ONLY:-} == 1 ]]; then
+      GROUPS_="xrossimulator:xrossimulator-arm64"
+    else
+      GROUPS_="xros:xros-arm64 xrossimulator:xrossimulator-arm64,xrossimulator-amd64"
+    fi
+    PLIST_KEY=MinimumOSVersion ;;
   *) exit 2 ;;
 esac
 
